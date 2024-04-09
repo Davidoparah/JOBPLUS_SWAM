@@ -1,0 +1,38 @@
+Install Terraform
+-----------------
+https://developer.hashicorp.com/terraform/install
+
+terraform --version
+
+Create Project Director
+-----------------------
+mkdir $HOME/Desktop/Jobplus-Swarm
+
+Initialize terraform
+--------------------
+terraform init
+
+touch /Users/mujimoyen/Documents/Codehance/Jobplus-Swarm/variables.tf &&
+touch /Users/mujimoyen/Documents/Codehance/Jobplus-Swarm/terraform.tfvars &&
+touch /Users/mujimoyen/Documents/Codehance/Jobplus-Swarm/main.tf
+
+variables.tf
+------------
+
+variable "do_token" {
+  description = "DigitalOcean API token"
+  type = string
+  sensitive = true
+}
+
+variable "ssh_fingerprint" {
+  description = "SSH Key fingerprint"
+  type = string
+  sensitive = true
+}
+
+variable "ssh_key" {
+  description = "Public SSH key path"
+  type = string
+  sensitive = true
+}
