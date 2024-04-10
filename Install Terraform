@@ -36,3 +36,24 @@ variable "ssh_key" {
   type = string
   sensitive = true
 }
+
+commands
+--------
+<!-- # Initialize Terraform, install providers. -->
+terraform init
+<!-- # Show planned infrastructure changes. -->
+terraform plan
+<!-- # Apply changes to reach desired state. -->
+terraform apply
+<!-- # Validate the Terraform files for syntax. -->
+terraform validate
+<!-- # List all resources in the current state. -->
+terraform state list
+<!-- # Mark a resource for recreation during the next apply. -->
+terraform taint <resource>
+<!-- # Remove the taint from a resource. -->
+terraform untaint <resource>
+<!-- # Show details of a specific resource in the state. -->
+terraform state show <resource>
+<!-- # destroy infrastructure created by terraform -->
+terraform destroy
