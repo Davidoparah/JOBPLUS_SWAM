@@ -57,3 +57,70 @@ terraform untaint <resource>
 terraform state show <resource>
 <!-- # destroy infrastructure created by terraform -->
 terraform destroy
+
+ssh into new box
+----------------
+ssh -i $HOME/.ssh/job_plus_ed25519 root@ip-address-here
+
+
+# contains list of repositories on ubuntu for updating
+# and installing packages
+`/etc/apt/sources.list` # main source
+`/etc/apt/sources.list.d/` # third party packages
+
+# Update the list of available packages and versions from the repositories
+apt-get update
+
+# Store the fetched or updated package lists in 
+`/var/lib/apt/lists/` # not the package itself!
+
+# Install new one based on package list (/var/lib/apt/lists/)
+`apt-get install ...`
+
+# Install locations:
+Executable files usually go to `/usr/bin/, /bin/`, or `/usr/local/bin/`
+Library files are often found in `/usr/lib/`, `/lib/`
+Configuration files stored in `/etc/`
+Documentation and manual placed in `/usr/share/doc/` and `/usr/share/man/`
+Data files stored in `/usr/share/` for static data, or `/var/lib/` for mutable data.
+
+install packages
+----------------
+sudo apt-get update
+sudo apt-get install -y software-properties-common
+sudo apt-add-repository --yes ppa:ansible/ansible
+sudo apt-get update
+sudo apt-get install -y ansible
+
+mutable change
+--------------
+# This will trigger VM recreate therefore losing manually installed packages
+
+
+--------
+provisioner "remote-exec"{
+  inline = [
+  "sudo apt-get update",
+  "sudo apt-get install -y software-properties-common",
+  "sudo apt-get-repository --yes ppa:ansible/ansible",
+  "sudo apt-get update",
+  "sudo apt-get install -y ansible",
+  ]
+
+  connection {
+    type = "ssh"
+    user = "root"
+    private_key = file("${var.ssh.key}")
+    host = self.ipv4_address
+  }
+}
+
+infrastructure change vs software update
+----------------------------------------
+Changing provisioner exec does not trigger change in terraform state
+becuase it is not technically infrastructure update to software update
+
+taint resource
+--------------
+terraform state list
+terraform taint <resource>
