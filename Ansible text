@@ -1,0 +1,73 @@
+## What is ansible?
+
+Ansible is an open-source automation platform used for configuration management, application deployment, and task automation.
+
+## Agentless
+
+In the context of Ansible, "agentless" means it does not require any software to be installed on the nodes it manages, instead using SSH for communication and task execution.
+
+## Playbooks
+
+A playbook in Ansible is a YAML file containing a list of one or more plays to automate tasks on remote servers.
+
+## Install Ansible on Mac
+
+https://brew.sh/
+
+brew install ansible
+
+## Install Ansible on Win
+
+Installing Ansible on Windows is not as straightforward as on Linux or macOS because Ansible does not natively run on Windows. However, you can use Windows Subsystem for Linux (WSL).
+
+https://www.youtube.com/watch?v=xeMDMu7wU3A&ab_channel=MichaelCrilly
+
+https://fakhridarmawan.medium.com/install-ansible-on-windows-subsystem-linux-ac9245219077
+
+Open PowerShell as Administrator and run:
+wsl --install
+
+Restart:
+Restart windows if required
+
+Install "Ubuntu":
+Open app microsoft store and search and install "Ubuntu"
+
+Go to start menu and open "Ubuntu"
+
+## spin up vm
+
+terraform -chdir=terraform apply
+
+## create ansible config file
+
+touch ansible.cfg
+
+## ansible.cfg
+
+[defaults]
+inventory = ./ansible/inventory.ini
+remote_user = root
+host_key_checking = False
+private_key_file = /Users/mujimoyen/.ssh/job_plus_ed25519
+
+[privilege_escalation]
+become = True
+become_method = sudo
+become_user = root
+
+## create ansible directory
+
+mkdir ansible &&
+touch ansible/inventory.ini &&
+touch ansible/playbook.yml
+
+## inventory.ini
+
+[swarm_managers]
+manager1 ansible_host=46.101.94.188 ansible_ssh_user=root ansible_ssh_private_key_file=/Users/mujimoyen/.ssh/job_plus_ed25519
+
+[swarm_workers]
+worker1 ansible_host=167.71.134.243 ansible_ssh_user=root ansible_ssh_private_key_file=/Users/mujimoyen/.ssh/job_plus_ed25519
+
+## playbook.yml

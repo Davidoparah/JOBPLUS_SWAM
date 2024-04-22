@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notified_jobs",
+  "info": {
+    "singularName": "notified-job",
+    "pluralName": "notified-jobs",
+    "displayName": "Notified Job"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "notified_jobs"
+    },
+    "job": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::job.job",
+      "inversedBy": "notified_jobs"
+    }
+  }
+}

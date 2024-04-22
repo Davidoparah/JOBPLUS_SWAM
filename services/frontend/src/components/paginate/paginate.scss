@@ -1,0 +1,23 @@
+.paginate {
+  display: flex;
+  justify-content: space-between;
+  color: var(--beta);
+  font-weight: bold;
+
+  .disabled {
+    color: gray;
+    cursor:  not-allowed;
+    pointer-events: none;
+  }
+
+  .page-numbers {
+    display: flex;
+    gap: 10rem;
+  }
+
+  li.active {
+    border: 2px solid var(--beta);
+    padding: 0rem 5rem;
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "kind": "collectionType",
+  "collectionName": "jobs",
+  "info": {
+    "singularName": "job",
+    "pluralName": "jobs",
+    "displayName": "Job",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "salaryType": {
+      "type": "enumeration",
+      "enum": [
+        "Negotiable",
+        "Fixed"
+      ]
+    },
+    "salary": {
+      "type": "decimal"
+    },
+    "description": {
+      "type": "richtext"
+    },
+    "job_types": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::job-type.job-type",
+      "inversedBy": "jobs"
+    },
+    "company": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::company.company",
+      "inversedBy": "jobs"
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "jobs"
+    },
+    "location": {
+      "type": "enumeration",
+      "enum": [
+        "Bath",
+        "Birmingham",
+        "London",
+        "Durham",
+        "Winchester"
+      ]
+    },
+    "applied_jobs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::applied-job.applied-job",
+      "mappedBy": "job"
+    },
+    "skills": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::skill.skill",
+      "mappedBy": "jobs"
+    },
+    "saved_jobs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::saved-job.saved-job",
+      "mappedBy": "job"
+    },
+    "notified_jobs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::notified-job.notified-job",
+      "mappedBy": "job"
+    }
+  }
+}

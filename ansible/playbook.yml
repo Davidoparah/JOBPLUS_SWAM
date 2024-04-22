@@ -1,0 +1,108 @@
+- hosts: swarm_managers
+  become: true
+
+  tasks:
+    - name: Update apt and install dependencies
+      apt:
+        name: "{{ packages }}"
+        update_cache: yes
+      vars:
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - git
+    - name: Add Docker's official GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Get Ubuntu codename
+      command: lsb_release -cs
+      register: ubuntu_codename
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_codename.stdout }} stable"
+        state: present
+
+    - name: Install Docker CE
+      apt:
+        name: docker-ce
+        update_cache: yes
+
+    - name: Enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create deplouser
+      ansible.builtin.user:
+        name: deployuser
+        shell: /bin/bash
+        create_home: yes
+        system: no
+
+    - name: Add deployuser to sudo group
+      ansible.builtin.user:
+        name: deployuser
+        groups: sudo
+        append: yes
+
+    - name: add deployuser to docker group
+      ansible.builtin.user:
+        name: deployuser
+        groups: docker
+        append: yes
+
+    - name: Install Docker Compose
+      remote_user: ubuntu
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/v2.25.0/docker-compose-linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: "0755"
+
+    - name: Create .ssh directory for deployuser
+      ansible.builtin.file:
+        path: /home/deployuser/.ssh
+        state: directory
+        owner: deployuser
+        group: deployuser
+        mode: "0700"
+    - name: Copy authorized_keys for deployuser on remote
+      ansible.builtin.copy:
+        src: /root/.ssh/authorized_keys # Source path on the remote machine
+        dest: /home/deployuser/.ssh/authorized_keys # Destination path on the remote machine
+        owner: deployuser
+        group: deployuser
+        mode: "0600"
+        remote_src: yes # indicate operationon remote
+
+    # DigitalOcean Monitoring Agent
+    - name: Install DigitalOcean Monitoring Agent
+      shell: "curl -sSL https://repos.insights.digitalocean.com/install.sh | sudo bash "
+
+    # Open Firewall Ports for HTTP and HTTPS
+    - name: Allow HTTP traffic
+      community.general.ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+      tags:
+        - firewall_allow
+    - name: Allow HTTP traffic
+      community.general.ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+
+    - name: Install Python Docker packer via apt
+      ansible.builtin.apt:
+        name: python3-docker
+        state: present
+        update_cache: yes
+      become: true
+      tags:
+        - python_docker
