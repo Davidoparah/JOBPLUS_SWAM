@@ -38,7 +38,7 @@
         state: started
         enabled: yes
 
-    - name: Create deplouser
+    - name: Create deployuser
       ansible.builtin.user:
         name: deployuser
         shell: /bin/bash
@@ -71,6 +71,7 @@
         owner: deployuser
         group: deployuser
         mode: "0700"
+
     - name: Copy authorized_keys for deployuser on remote
       ansible.builtin.copy:
         src: /root/.ssh/authorized_keys # Source path on the remote machine
