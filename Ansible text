@@ -71,3 +71,94 @@ manager1 ansible_host=46.101.94.188 ansible_ssh_user=root ansible_ssh_private_ke
 worker1 ansible_host=167.71.134.243 ansible_ssh_user=root ansible_ssh_private_key_file=/Users/mujimoyen/.ssh/job_plus_ed25519
 
 ## playbook.yml
+
+## Host
+
+- hosts: swarm_managers
+  become: yes
+
+We are targeting the swarm_manager nodes
+and `become: yes` is where we escalate the privilege to run as superuser/root
+
+## Task
+
+A task is the smallest unit of action in an Ansible playbook. It represents a single procedure to be executed, such as installing a package, copying a file, or executing a command.
+
+## Task anatomy example
+
+`name:` Describes what the task does
+`module_name:` Specifies the module to execute, such as apt, file, copy, etc.
+`key: value:` Arguments for the module. These are module-specific options.
+`register:` Captures the output of a task into a variable.
+
+## Ansible Role
+
+Roles enable the sharing of automation tasks.
+
+## automated ansible create role
+
+ansible-galaxy init <role_name>
+
+## manual role create
+
+using manual creation of role to keep things simple
+especially for our use case
+
+mkdir -p ansible/roles/common_tasks/tasks &&
+touch ansible/roles/common_tasks/tasks/main.yml
+
+## content of role's main.yml
+
+existing playbook content ( minus header definition )
+
+## servers inventory
+
+[servers:children]
+swarm_managers
+swarm_workers
+
+## create manager and worker playbooks
+
+touch ansible/manager_playbook.yml &&
+touch ansible/worker_playbook.yml &&
+touch ansible/servers_playbook.yml
+
+## manager_playbook.yml
+
+---
+
+- hosts: swarm_managers
+  become: yes
+
+  roles:
+
+  - common_tasks
+
+## Worker_playbook.yml
+
+---
+
+- hosts: swarm_workers
+  become: yes
+
+  roles:
+
+  - common_tasks
+
+## servers_playbook.yml
+
+---
+
+- hosts: servers
+  become: yes
+
+  roles:
+
+  - common_tasks
+
+## run playbooks
+
+ansible-playbook -i ansible/inventory.ini ansible/manager_playbook.yml -v
+ansible-playbook -i ansible/inventory.ini ansible/worker_playbook.yml -v
+
+ansible-playbook -i ansible/inventory.ini ansible/servers_playbook.yml -v
