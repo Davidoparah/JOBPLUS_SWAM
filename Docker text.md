@@ -123,3 +123,122 @@ touch ansible/gluster_playbook.yml
     apt_repository:
     repo: ppa:gluster/glusterfs-11
     update_cache: yes
+    tags:
+
+    - add_glusterfs_ppa
+
+  - name: Install GlusterFS server
+    apt:
+    name: glusterfs-server
+    state: latest
+    tags:
+
+    - install_glusterfs
+
+  - name: Start GlusterFS service
+    systemd:
+    name: glusterd
+    state: started
+    enabled: yes
+    tags:
+
+    - start_glusterd
+
+  - name: Enable GlusterFS service to start on boot
+    systemd:
+    name: glusterd
+    enabled: yes
+    tags:
+
+    - enable_glusterd
+
+  - name: Check GlusterFS service status
+    command: systemctl status glusterd
+    register: glusterd_status
+    tags:
+
+    - status_glusterd
+
+  - name: Display GlusterFS service status
+    debug:
+    var: gluster_status.stdout_lines
+    tags:
+
+    - status_glusterd
+
+  - name: Set hostname to match inventory name
+    hostname:
+    name: "{{ inventory_hostname }}"
+    when: inventory_hostname in group ['servers']
+    tags:
+
+    - set_hostname
+
+  - name: Update /etc/hosts with localhost
+    lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1 {{inventory_hostname}}"
+    regexp: '^127\.0\.0\.1 {{ inventory_hostname }}'
+    state: present
+    tags:
+
+    - update_hosts_local
+
+  - name: Update /etc/hosts with node IP and name
+    lineinfile:
+    path: /etc/hosts
+    line: "{{hostvars[item].ansible_host }} {{ item }}"
+    regexp: "^{{ hostvars[item].ansible_host }} {{ item }}"
+    state: present
+    loop: "{{ group [' servers '] }}"
+    when: hostvars[item].ansible_host is defined
+    tags:
+
+    - update_hosts_other
+
+  - name: Create shared storage brick directory
+    file:
+    path: /data/bricks/shared_storage
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    tags:
+
+    - create_brick_dir
+
+  - name: Create mount point for shared storage
+    file:
+    path: /mnt/shared_storage
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    tags:
+
+    - create_mount_point
+
+  - name: Get Gluster peer status
+    command: gluster peer status
+    register: gluster_peer_status
+    ignore_errors: yes
+    tags: -get_peer_status
+
+  - name: Set fact exiting peers hotnames
+    set_fact:
+    exiting_peers_hostname: " {{ gluster_peer_status.stdout | regex_findall ('Hostname: (\\S+)') }}"
+    when: gluster_peer_status.rc == 0
+    tags:
+
+    - set_peer_fact
+
+  - name: Probe other peers to form a trusted pool
+    gluster.gluster.gluster_peer:
+    state: present
+    nodes: " {{ (inventory_hostname == groups['servers'] [0] and 'localhost' in (existing_peers_hostname | default([]))) | ternary (' localhost ' + item, item) }}"
+    loop: "{{ groups['servers'] }}"
+    when:
+    - inventory_hostname != item
+    - item not in existing_peers_hostnames
+      tags:
+    - probe_peers
