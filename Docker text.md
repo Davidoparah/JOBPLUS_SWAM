@@ -169,7 +169,7 @@ touch ansible/gluster_playbook.yml
   - name: Set hostname to match inventory name
     hostname:
     name: "{{ inventory_hostname }}"
-    when: inventory_hostname in group ['servers']
+    when: inventory_hostname in groups ['servers']
     tags:
 
     - set_hostname
@@ -178,7 +178,7 @@ touch ansible/gluster_playbook.yml
     lineinfile:
     path: /etc/hosts
     line: "127.0.0.1 {{inventory_hostname}}"
-    regexp: '^127\.0\.0\.1 {{ inventory_hostname }}'
+    regexp: '^127\.0\.0\.1 {{inventory_hostname}}'
     state: present
     tags:
 
@@ -187,10 +187,10 @@ touch ansible/gluster_playbook.yml
   - name: Update /etc/hosts with node IP and name
     lineinfile:
     path: /etc/hosts
-    line: "{{hostvars[item].ansible_host }} {{ item }}"
+    line: "{{ hostvars[item].ansible_host }} {{ item }}"
     regexp: "^{{ hostvars[item].ansible_host }} {{ item }}"
     state: present
-    loop: "{{ group [' servers '] }}"
+    loop: "{{ groups['servers'] }}"
     when: hostvars[item].ansible_host is defined
     tags:
 
@@ -226,7 +226,7 @@ touch ansible/gluster_playbook.yml
 
   - name: Set fact exiting peers hotnames
     set_fact:
-    exiting_peers_hostname: " {{ gluster_peer_status.stdout | regex_findall ('Hostname: (\\S+)') }}"
+    existing_peers_hostnames: " {{ gluster_peer_status.stdout | regex_findall ('Hostname: (\\S+)') }}"
     when: gluster_peer_status.rc == 0
     tags:
 
@@ -235,10 +235,168 @@ touch ansible/gluster_playbook.yml
   - name: Probe other peers to form a trusted pool
     gluster.gluster.gluster_peer:
     state: present
-    nodes: " {{ (inventory_hostname == groups['servers'] [0] and 'localhost' in (existing_peers_hostname | default([]))) | ternary (' localhost ' + item, item) }}"
+    #nodes: " {{ (inventory_hostname == groups['servers'][0] and 'localhost' in (existing_peers_hostnames | default([]))) | ternary (' localhost ' + item, item) }}"
+    nodes: "{{ 'localhost' if inventory_hostname == groups['servers'][0] and 'localhost' in (existing_peers_hostnames | default([])) else item }}"
     loop: "{{ groups['servers'] }}"
     when:
     - inventory_hostname != item
     - item not in existing_peers_hostnames
       tags:
     - probe_peers
+
+# This playbook is designed to create a GlusterFS shared storage volume
+
+# on the manager node of a swarm cluster. Since GlusterFS configuration
+
+# and volume creation commands need only to be executed once and will
+
+# apply across the cluster, we target only the manager node for these operations.
+
+# This approach avoids redundant execution and ensures centralized management
+
+# of the GlusterFS volume.
+
+# ansible-playbook -i ansible/inventory.ini ansible/gluster_playbook.yml -v --tags "replica_count, create_volume, volume_status, start_volume"
+
+#- name: Create Shared Storage Volume
+
+# hosts: manager1
+
+# become: yes
+
+# tasks:
+
+# - name: Calculate the number of replaicas
+
+# set_fact:
+
+# replica_count: "{{ groups['servers'] | length }}"
+
+# tags:
+
+# - replica_count:
+
+#
+
+# - name: Create GlusterFS volume named shared_storage
+
+# shell: >
+
+# gluster volume create shared_storage replica {{ replica_count }}
+
+# {% for host in groups['servers'] %}
+
+# {{ host }}:/data/bricks/shared_storage
+
+# {% endfor %}
+
+# force
+
+# args:
+
+# creates: /var/lib/glusterd/vols/shared_storage
+
+# tags:
+
+# - create_volume
+
+#
+
+# - name: Check GlusterFS volume status
+
+# command: gluster volume status shared_storage
+
+# register: volume_status
+
+# failed_when: "'Volume shared_storage is not started' not in volume_status.stderr and volume_status.rc != 0"
+
+# tags:
+
+# - volume_status
+
+#
+
+# - name: Start GlusterFS volume if not started
+
+# command: gluster volume start shared_storage
+
+# when: "'Volume shared_storage is not started' in volume_status.stderr"
+
+# tags:
+
+# - start_volume
+
+##1YADARIUS
+##D0PARAHZ22
+##ANF12062519
+
+- name: Create Shared Storage Volume
+  hosts: manager1
+  become: yes
+  tasks:
+
+  - name: Calculate the number of replicas
+    set_fact:
+    replica_count: "{{ groups['servers'] | length }}"
+    tags:
+
+    - replica_count
+
+  - name: Create GlusterFS volume named shared_storage
+    shell: >
+    gluster volume create shared_storage replica {{ replica_count }}
+    {% for host in groups['servers'] %}
+    {{ host }}:/data/bricks/shared_storage
+    {% endfor %}
+    force
+    args:
+    creates: /var/lib/glusterd/vols/shared_storage
+    tags:
+
+    - create_volume
+
+  - name: Check GlusterFS volume status
+    command: gluster volume status shared_storage
+    register: volume_status
+    failed_when: "'Volume shared_storage is not started' not in volume_status.stderr and volume_status.rc != 0"
+    tags:
+
+    - volume_status
+
+  - name: Start GlusterFS volume if not started
+    command: gluster volume start shared_storage
+    when: "'Volume shared_storage is not started' in volume_status.stderr"
+    tags:
+    - start_volume
+
+# Mount GlusterFS Volume
+
+# ansible-playbook -i ansible/inventory.ini ansible/gluster_playbook.yml -v --tags "check_volume_mounted, mount_volume"
+
+- name: Mount GlusterFS volume
+  hosts: servers
+  become: yes
+  tasks:
+
+  - name: Check if GlusterFS volume is already mounted
+    command: mount | grep /mnt/shared_storage
+    register: mount_check
+    failed_when: mount_check.rc == 2
+    changed_when: false
+    ignore_errors: true
+    tags:
+
+    - check_volume_mounted
+
+  - name: Mount GlusterFS volume
+    mount:
+    path: /mnt/shared_storage
+    src: "{{ inventory_hostname }}:/shared_storage"
+    fstype: glusterfs
+    opts: defaults,\_netdev
+    state: mounted
+    when: mount_check.rc != 0
+    tags:
+    - mount_volume
+
+...

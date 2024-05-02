@@ -1,0 +1,22 @@
+# gluster_mount_volume/tasks/main.yml
+# -----------------------------------
+---
+- name: Check if GlusterFS volume is already mounted
+  command: mount | grep /mnt/shared_storage
+  register: mount_check
+  failed_when: mount_check.rc == 2
+  changed_when: false
+  ignore_errors: true
+  tags:
+    - check_volume_mounted
+
+- name: Mount GlusterFS volume
+  mount:
+    path: /mnt/shared_storage
+    src: "{{ inventory_hostname }}:/shared_storage"
+    fstype: glusterfs
+    opts: defaults,_netdev
+    state: mounted
+  when: mount_check.rc != 0
+  tags:
+    - mount_volume

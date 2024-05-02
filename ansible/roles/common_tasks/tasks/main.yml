@@ -1,3 +1,10 @@
+## run playbooks
+
+# ansible-playbook -i ansible/inventory.ini ansible/manager_playbook.yml -v
+# ansible-playbook -i ansible/inventory.ini ansible/worker_playbook.yml -v
+
+# ansible-playbook -i ansible/inventory.ini ansible/servers_playbook.yml -v
+
 ---
 - name: Update apt and install dependencies
   apt:
@@ -27,7 +34,7 @@
 - name: Install Docker CE
   apt:
     name: docker-ce
-    update_cache: yes
+    update_cache: true
 
 - name: Enable Docker service
   systemd:

@@ -162,3 +162,11 @@ ansible-playbook -i ansible/inventory.ini ansible/manager_playbook.yml -v
 ansible-playbook -i ansible/inventory.ini ansible/worker_playbook.yml -v
 
 ansible-playbook -i ansible/inventory.ini ansible/servers_playbook.yml -v
+
+ansible web_servers -m command -a 'fdisk -l' -u admin --become -K BECOME password:**\*\***
+ansible web_servers -m command -a 'df -h'
+ansible web_servers -m command -a 'ls -l'
+ansible web_servers -m setup
+ansible web_servers -m setup -a "filter=\*family" --check
+
+Net show route

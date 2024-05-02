@@ -1,0 +1,39 @@
+# gluster_shared_volume/tasks/main.yml
+# ------------------------------------
+---
+# This playbook is designed to create a GlusterFS shared storage volume
+# on the manager node of a swarm cluster. Since GlusterFS configuration
+# and volume creation commands need only to be executed once and will
+# apply across the cluster, we target only the manager node for these operations.
+# This approach avoids redundant execution and ensures centralized management
+# of the GlusterFS volume.
+- name: Calculate the number of replicas
+  set_fact:
+    replica_count: "{{ groups['servers'] | length }}"
+  tags:
+    - replica_count
+
+- name: Create GlusterFS volume named shared_storage
+  command: >
+    gluster volume create shared_storage replica {{ replica_count }}
+    {% for host in groups['servers'] %}
+    {{ host }}:/data/bricks/shared_storage
+    {% endfor %}
+    force
+  args:
+    creates: /var/lib/glusterd/vols/shared_storage
+  tags:
+    - create_volume
+
+- name: Check GlusterFS volume status
+  command: gluster volume status shared_storage
+  register: volume_status
+  failed_when: "'Volume shared_storage is not started' not in volume_status.stderr and volume_status.rc != 0"
+  tags:
+    - volume_status
+
+- name: Start GlusterFS volume if not started
+  command: gluster volume start shared_storage
+  when: "'Volume shared_storage is not started' in volume_status.stderr"
+  tags:
+    - volume_start
