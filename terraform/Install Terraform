@@ -1,126 +1,148 @@
-Install Terraform
------------------
+## Install Terraform
+
 https://developer.hashicorp.com/terraform/install
 
 terraform --version
 
-Create Project Director
------------------------
+## Create Project Director
+
 mkdir $HOME/Desktop/Jobplus-Swarm
 
-Initialize terraform
---------------------
+## Initialize terraform
+
 terraform init
 
 touch /Users/mujimoyen/Documents/Codehance/Jobplus-Swarm/variables.tf &&
 touch /Users/mujimoyen/Documents/Codehance/Jobplus-Swarm/terraform.tfvars &&
 touch /Users/mujimoyen/Documents/Codehance/Jobplus-Swarm/main.tf
 
-variables.tf
-------------
+## variables.tf
 
 variable "do_token" {
-  description = "DigitalOcean API token"
-  type = string
-  sensitive = true
+description = "DigitalOcean API token"
+type = string
+sensitive = true
 }
 
 variable "ssh_fingerprint" {
-  description = "SSH Key fingerprint"
-  type = string
-  sensitive = true
+description = "SSH Key fingerprint"
+type = string
+sensitive = true
 }
 
 variable "ssh_key" {
-  description = "Public SSH key path"
-  type = string
-  sensitive = true
+description = "Public SSH key path"
+type = string
+sensitive = true
 }
 
-commands
---------
+## commands
+
 <!-- # Initialize Terraform, install providers. -->
+
 terraform init
+
 <!-- # Show planned infrastructure changes. -->
+
 terraform plan
+
 <!-- # Apply changes to reach desired state. -->
+
 terraform apply
+
 <!-- # Validate the Terraform files for syntax. -->
+
 terraform validate
+
 <!-- # List all resources in the current state. -->
+
 terraform state list
+
 <!-- # Mark a resource for recreation during the next apply. -->
+
 terraform taint <resource>
+
 <!-- # Remove the taint from a resource. -->
+
 terraform untaint <resource>
+
 <!-- # Show details of a specific resource in the state. -->
+
 terraform state show <resource>
+
 <!-- # destroy infrastructure created by terraform -->
+
 terraform destroy
 
-ssh into new box
-----------------
-ssh -i $HOME/.ssh/job_plus_ed25519 root@ip-address-here
+## ssh into new box
 
+ssh -i $HOME/.ssh/job_plus_ed25519 root@ip-address-here
+ssh -i $HOME/.ssh/job_plus_ed25519 deployuser@144.126.198.226
 
 # contains list of repositories on ubuntu for updating
+
 # and installing packages
+
 `/etc/apt/sources.list` # main source
 `/etc/apt/sources.list.d/` # third party packages
 
 # Update the list of available packages and versions from the repositories
+
 apt-get update
 
-# Store the fetched or updated package lists in 
+# Store the fetched or updated package lists in
+
 `/var/lib/apt/lists/` # not the package itself!
 
 # Install new one based on package list (/var/lib/apt/lists/)
+
 `apt-get install ...`
 
 # Install locations:
+
 Executable files usually go to `/usr/bin/, /bin/`, or `/usr/local/bin/`
 Library files are often found in `/usr/lib/`, `/lib/`
 Configuration files stored in `/etc/`
 Documentation and manual placed in `/usr/share/doc/` and `/usr/share/man/`
 Data files stored in `/usr/share/` for static data, or `/var/lib/` for mutable data.
 
-install packages
-----------------
+## install packages
+
 sudo apt-get update
 sudo apt-get install -y software-properties-common
 sudo apt-add-repository --yes ppa:ansible/ansible
 sudo apt-get update
 sudo apt-get install -y ansible
 
-mutable change
---------------
+## mutable change
+
 # This will trigger VM recreate therefore losing manually installed packages
 
+---
 
---------
 provisioner "remote-exec"{
-  inline = [
-  "sudo apt-get update",
-  "sudo apt-get install -y software-properties-common",
-  "sudo apt-get-repository --yes ppa:ansible/ansible",
-  "sudo apt-get update",
-  "sudo apt-get install -y ansible",
-  ]
+inline = [
+"sudo apt-get update",
+"sudo apt-get install -y software-properties-common",
+"sudo apt-get-repository --yes ppa:ansible/ansible",
+"sudo apt-get update",
+"sudo apt-get install -y ansible",
+]
 
-  connection {
-    type = "ssh"
-    user = "root"
-    private_key = file("${var.ssh.key}")
-    host = self.ipv4_address
-  }
+connection {
+type = "ssh"
+user = "root"
+private_key = file("${var.ssh.key}")
+host = self.ipv4_address
+}
 }
 
-infrastructure change vs software update
-----------------------------------------
+## infrastructure change vs software update
+
 Changing provisioner exec does not trigger change in terraform state
 becuase it is not technically infrastructure update to software update
 
-taint resource
---------------
+## taint resource
+
 terraform state list
 terraform taint <resource>

@@ -6,6 +6,33 @@
   tags:
     - proper_common
 
+- name: Set hostname to match inventory name
+  hostname:
+    name: "{{ inventory_hostname }}"
+  when: inventory_hostname in groups['servers']
+  tags:
+    - set_hostname
+
+- name: Update /etc/hosts with localhost
+  lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1 {{ inventory_hostname }}"
+    regexp: '^127\.0\.0\.1 {{ inventory_hostname }}'
+    state: present
+  tags:
+    - update_hosts_local
+
+- name: Update /etc/hosts with node IP and name
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ hostvars[item].ansible_host }} {{ item }}"
+    regexp: "^{{ hostvars[item].ansible_host }} {{ item }}"
+    state: present
+  loop: "{{ groups['servers'] }}"
+  when: hostvars[item].ansible_host is defined
+  tags:
+    - update_hosts_other
+
 - name: Add GlusterFS PPA
   apt_repository:
     repo: ppa:gluster/glusterfs-11
@@ -46,33 +73,6 @@
     var: glusterd_status.stdout_lines
   tags:
     - status_glusterd
-
-- name: Set hostname to match inventory name
-  hostname:
-    name: "{{ inventory_hostname }}"
-  when: inventory_hostname in groups['servers']
-  tags:
-    - set_hostname
-
-- name: Update /etc/hosts with localhost
-  lineinfile:
-    path: /etc/hosts
-    line: "127.0.0.1 {{ inventory_hostname }}"
-    regexp: '^127\.0\.0\.1 {{ inventory_hostname }}'
-    state: present
-  tags:
-    - update_hosts_local
-
-- name: Update /etc/hosts with node IP and name
-  lineinfile:
-    path: /etc/hosts
-    line: "{{ hostvars[item].ansible_host }} {{ item }}"
-    regexp: "^{{ hostvars[item].ansible_host }} {{ item }}"
-    state: present
-  loop: "{{ groups['servers'] }}"
-  when: hostvars[item].ansible_host is defined
-  tags:
-    - update_hosts_other
 
 - name: Create shared storage brick directory
   file:
@@ -118,3 +118,4 @@
     - item not in existing_peers_hostnames
   tags:
     - probe_peers
+  ignore_errors: true
