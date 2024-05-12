@@ -1,0 +1,24 @@
+---
+- name: Check if already part of Docker Swarm
+  ansible.builtin.shell:
+    cmd: "docker info --format '{{ '{{.Swarm.LocalNodeState}}' }}'"
+  register: docker_swarm_status
+  changed_when: false
+
+- name: Fetch swarm_info.yml from remote host
+  ansible.builtin.fetch:
+    src: "/mnt/shared_storage/swarm_info.yml"
+    dest: "./swarm_info.yml"
+    flat: yes
+  run_once: true
+
+- name: Include variables from fetched swarm_info.yml
+  ansible.builtin.include_vars:
+    file: "./swarm_info.yml"
+
+- name: Join the Docker Swarm cluster
+  ansible.builtin.shell:
+    cmd: "docker swarm join --token {{ swarm_worker_join_token }} {{ swarm_manager_public_ip }}:2377"
+  when: >
+    swarm_worker_join_token is defined and swarm_manager_public_ip is defined and 
+    docker_swarm_status.stdout != 'active'

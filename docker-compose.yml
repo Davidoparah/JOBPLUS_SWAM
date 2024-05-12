@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80" # Expose Nginx on port 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf # Mount the custom configuration
+    restart: always
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - shared_swarm_network
+
+  visualizer:
+    image: dockersamples/visualizer
+    # Removed ports: '8500:8080' to not expose directly
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - shared_swarm_network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+networks:
+  shared_swarm_network:
+    external: true

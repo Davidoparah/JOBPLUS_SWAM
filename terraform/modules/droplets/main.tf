@@ -44,21 +44,4 @@ resource "digitalocean_droplet" "node" {
   size       = each.value.size
   region     = var.do_region
   ssh_keys   = [var.ssh_fingerprint]
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y software-properties-common",
-      "sudo apt-add-repository --yes ppa:ansible/ansible",
-      "sudo apt-get update",
-      "sudo apt-get install -y ansible",
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "root"
-      private_key = file(var.ssh_key)
-      host        = self.ipv4_address
-    }
-  }
 }

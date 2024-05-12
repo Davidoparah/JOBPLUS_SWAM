@@ -1,0 +1,22 @@
+---
+- name: Copy the Docker Compose file to the manager
+  copy:
+    src: "{{ playbook_dir }}/../docker-compose.yml"
+    dest: "/tmp/docker-compose.yml"
+  tags:
+    - copy_compose
+
+- name: Copy the Nginx config file to the manager
+  copy:
+    src: "{{ playbook_dir }}/../nginx.conf"
+    dest: "/tmp/nginx.conf"
+  tags:
+    - copy_nginx
+
+- name: Deploy services as a Docker Swarm stack
+  ansible.builtin.shell:
+    cmd: "docker stack deploy -c /tmp/docker-compose.yml monitor_stack"
+  args:
+    chdir: /tmp/
+  tags:
+    - deploy_services

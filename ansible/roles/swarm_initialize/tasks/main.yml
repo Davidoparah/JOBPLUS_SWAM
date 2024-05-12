@@ -1,0 +1,44 @@
+---
+- name: Check Docker Swarm status
+  ansible.builtin.command: docker info --format "{{ '{{.Swarm.LocalNodeState}}' }}"
+  register: swarm_status
+  changed_when: false
+  ignore_errors: true
+  tags:
+    - swarm_status
+
+- name: Fetch public IP address
+  ansible.builtin.command: curl -s http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address
+  register: ip_result
+  changed_when: false
+  tags:
+    - public_ip
+
+- name: Initialize Docker Swarm
+  ansible.builtin.shell:
+    cmd: "docker swarm init --advertise-addr {{ ip_result.stdout }} --listen-addr {{ ip_result.stdout }}:2377"
+  when: swarm_status.stdout != 'active'
+  tags:
+    - swarm
+
+- name: Retrieve Docker Swarm worker join token
+  ansible.builtin.command: docker swarm join-token worker -q
+  register: worker_join_token
+  changed_when: false
+  run_once: true
+
+- name: Save Swarm manager's IP and join token to GlusterFS
+  ansible.builtin.copy:
+    dest: "/mnt/shared_storage/swarm_info.yml"
+    content: |
+      swarm_manager_public_ip: "{{ ip_result.stdout }}"
+      swarm_worker_join_token: "{{ worker_join_token.stdout }}"
+  run_once: true
+
+- name: Create shared Docker network
+  community.general.docker_network:
+    name: shared_swarm_network
+    driver: overlay
+    attachable: true
+  tags:
+    - create_network

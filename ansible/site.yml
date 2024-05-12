@@ -1,31 +1,45 @@
-# ansible/site.yml
-# ----------------
-
-# Ansible processes these plays in the order they are defined, maintaining a clear and organized flow of configuration tasks across the different host groups.
-# Parallelism is managed by Ansible's 'forks' configuration, allowing multiple hosts to be configured in parallel up to the specified limit.
-
 ---
-- hosts: servers
+- name: Setup Common Tasks & Gluster Install
+  hosts: servers
   become: true
   roles:
-    # These will be install on all nodes
     - common_tasks
     - gluster_install
 
-- hosts: swarm_managers
-  become: true
-  tasks:
-    # through manager we create shared directory
-    # on all nodes, but this can be achieved just
-    # from one node. e.g manager
-    - name: Conditionally execute on the first manager only
-      include_role:
-        name: gluster_shared_volume
-      when: inventory_hostname == groups['swarm_managers'][0]
-
-- hosts: servers
+- name: Gluster Shared Volume
+  hosts: swarm_managers[0]
   become: true
   roles:
-    # We need this to run after swarm manager has created
-    # gluster_shared_volume
+    - gluster_shared_volume
+  tags:
+    - swarm_shared_volume
+
+- name: Mount GlusterFS Volume on all Nodes
+  hosts: servers
+  become: true
+  roles:
     - gluster_mount_volume
+
+- name: Swarm Initialize
+  hosts: swarm_managers[0]
+  become: true
+  roles:
+    - swarm_initialize
+  tags:
+    - swarm_initialize
+
+- name: Swarm Deploy
+  hosts: swarm_managers[0]
+  become: true
+  roles:
+    - swarm_deploy
+  tags:
+    - swarm_deploy
+
+- name: Join Swarm as workers
+  hosts: swarm_workers
+  become: true
+  roles:
+    - join_swarm
+  tags:
+    - add_workers_to_swarm

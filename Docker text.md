@@ -400,3 +400,75 @@ touch ansible/gluster_playbook.yml
     - mount_volume
 
 ...
+
+# docker swarm inspecting
+
+---
+
+# Listing Nodes
+
+# Lists all nodes in the Docker Swarm cluster.
+
+docker node ls
+
+# Listing Services
+
+# Displays all services deployed in the Docker Swarm cluster.
+
+docker service ls
+
+# Inspecting Service Tasks
+
+# Shows details about tasks of a specific service within the Docker Swarm.
+
+docker service ps <service_name>
+
+# Viewing Service Logs
+
+# Retrieves logs from tasks of a specified service in Docker Swarm.
+
+docker service logs <service_id_or_name>
+
+# Listing Networks
+
+# Lists all networks available in the Docker environment.
+
+docker network ls
+
+# Inspecting a Network
+
+# Provides detailed information about a specific network in Docker.
+
+docker network inspect shared_swarm_network
+
+# list all containers across all nodes
+
+docker container ls
+
+# Executing an interactive bash shell inside a container
+
+docker exec -it <container_id_or_name> bash
+
+# Clean up unused Docker objects
+
+docker system prune
+
+# Get real-time events from Docker Swarm
+
+docker events --filter scope=swarm
+
+# Inspect a service to see its configuration and other details
+
+docker service inspect --pretty <service_name>
+
+# Scale a service to a specific number of replicas
+
+docker service scale <service_name>=<number_of_replicas>
+
+# Follow logs in real time for a specific service
+
+docker service logs -f <service_id_or_name>
+
+# Display a live stream of container(s) resource usage statistics
+
+docker stats

@@ -24,14 +24,6 @@ module "floating_ips" {
   droplet_details = module.droplets.droplet_details
 }
 
-
-module "ansible_setup" {
-  source = "./modules/ansible_setup"
-  do_token = var.do_token
-  floating_ip_details = module.floating_ips.floating_ip_details
-  ssh_private_key_path = "/Users/mujimoyen/.ssh/job_plus_ed25519"
-}
-
 module "loadbalancer" {
   source = "./modules/loadbalancer"
 
@@ -40,3 +32,12 @@ module "loadbalancer" {
   do_token = var.do_token
   droplet_ids = [for _, details in module.droplets.droplet_details : details.id]
 } 
+
+module "ansible_setup" {
+  source = "./modules/ansible_setup"
+  do_token = var.do_token
+  floating_ip_details = module.floating_ips.floating_ip_details
+  ssh_private_key_path = "/Users/mujimoyen/.ssh/job_plus_ed25519"
+  lb_ip = module.loadbalancer.lb_ip
+}
+

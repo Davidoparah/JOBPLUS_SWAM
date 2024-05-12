@@ -24,6 +24,7 @@ data "template_file" "inventory" {
   vars = {
     managers = join("\n", local.managers)
     workers = join("\n", local.workers)
+    lb_ip = var.lb_ip
   }
 }
 
