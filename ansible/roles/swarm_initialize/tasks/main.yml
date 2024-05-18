@@ -27,12 +27,19 @@
   changed_when: false
   run_once: true
 
+- name: Retrieve Docker Swarm manager join token
+  ansible.builtin.command: docker swarm join-token manager -q
+  register: manager_join_token
+  changed_when: false
+  run_once: true
+
 - name: Save Swarm manager's IP and join token to GlusterFS
   ansible.builtin.copy:
     dest: "/mnt/shared_storage/swarm_info.yml"
     content: |
       swarm_manager_public_ip: "{{ ip_result.stdout }}"
       swarm_worker_join_token: "{{ worker_join_token.stdout }}"
+      swarm_manager_join_token: "{{ manager_join_token.stdout }}"
   run_once: true
 
 - name: Create shared Docker network

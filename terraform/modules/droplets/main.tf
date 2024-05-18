@@ -24,11 +24,6 @@ variable "nodes" {
       image = "ubuntu-23-10-x64"
       size  = "s-2vcpu-4gb-120gb-intel"
     },
-    "manager2" = {
-      role  = "manager"
-      image = "ubuntu-23-10-x64"
-      size  = "s-2vcpu-4gb-120gb-intel"
-    },
     "worker1" = {
       role  = "worker"
       image = "ubuntu-23-10-x64"

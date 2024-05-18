@@ -16,9 +16,20 @@
   ansible.builtin.include_vars:
     file: "./swarm_info.yml"
 
-- name: Join the Docker Swarm cluster
+- name: Join the Docker Swarm cluster as a worker
   ansible.builtin.shell:
     cmd: "docker swarm join --token {{ swarm_worker_join_token }} {{ swarm_manager_public_ip }}:2377"
-  when: >
-    swarm_worker_join_token is defined and swarm_manager_public_ip is defined and 
-    docker_swarm_status.stdout != 'active'
+  when:
+    - swarm_worker_join_token is defined
+    - swarm_manager_public_ip is defined
+    - docker_swarm_status.stdout != 'active'
+    - inventory_hostname in groups['swarm_workers']
+
+- name: Join the Docker Swarm cluster a manager
+  ansible.builtin.shell:
+    cmd: "docker swarm join --token {{ swarm_manager_join_token }} {{ swarm_manager_public_ip }}:2377"
+  when:
+    - swarm_manager_join_token is defined
+    - swarm_manager_public_ip is defined
+    - docker_swarm_status.stdout != 'active'
+    - inventory_hostname in groups['swarm_managers']
