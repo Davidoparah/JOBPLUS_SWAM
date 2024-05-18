@@ -3,6 +3,7 @@ terraform {
   required_providers {
     digitalocean = {
       source  = "digitalocean/digitalocean"
+      #version = "latest" 
       version = "~> 2.36.0" 
     }
   }

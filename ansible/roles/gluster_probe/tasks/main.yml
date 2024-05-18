@@ -1,0 +1,39 @@
+---
+- name: Get Gluster peer status
+  command: gluster peer status
+  register: gluster_peer_status
+  ignore_errors: true
+  tags:
+    - get_peer_status
+
+- name: Set fact for existing peers hostnames
+  set_fact:
+    existing_peers_hostnames: "{{ gluster_peer_status.stdout | regex_findall('Hostname: (\\S+)') }}"
+  when: gluster_peer_status.rc == 0
+  tags:
+    - set_peer_fact
+
+# swarm_managers[0] will probe other nodes
+- name: Probe other peers to form a trusted pool
+  gluster.gluster.gluster_peer:
+    state: present
+    nodes: "{{ item }}"
+  loop: "{{ groups['servers'] }}"
+  when:
+    - inventory_hostname != item
+    - item not in existing_peers_hostnames
+  tags:
+    - probe_peers
+  ignore_errors: true
+
+# first worker node will probe back at first mananger node
+- name: Probe the first manager from the first worker
+  gluster.gluster.gluster_peer:
+    state: present
+    nodes: "{{ groups['swarm_managers'][0] }}"
+  delegate_to: "{{ groups['swarm_workers'][0] }}"
+  when:
+    - groups['swarm_workers'][0] is defined
+    - groups['swarm_managers'][0] not in existing_peers_hostnames
+  tags:
+    - probe_first_manager

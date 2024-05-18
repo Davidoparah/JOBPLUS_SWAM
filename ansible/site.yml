@@ -5,6 +5,16 @@
   roles:
     - common_tasks
     - gluster_install
+  tags:
+    - common
+
+- name: Probe nodes to form gluster pool
+  hosts: swarm_managers[0]
+  become: true
+  roles:
+    - gluster_probe
+  tags:
+    - gluster_probe
 
 - name: Gluster Shared Volume
   hosts: swarm_managers[0]
@@ -43,3 +53,11 @@
     - join_swarm
   tags:
     - add_workers_to_swarm
+
+- name: Join Swarm as managers
+  hosts: swarm_managers
+  become: true
+  roles:
+    - join_swarm
+  tags:
+    - add_managers_to_swarm

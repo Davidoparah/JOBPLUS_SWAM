@@ -20,5 +20,6 @@ resource "digitalocean_floating_ip" "floating_ip" {
 resource "digitalocean_floating_ip_assignment" "ip_assignment" {
   for_each = digitalocean_floating_ip.floating_ip
   droplet_id = var.droplet_details[each.key].id
-  ip_address = each.value.ip_address
+  #ip_address = each.value.ip_address
+  ip_address = digitalocean_floating_ip.floating_ip[each.key].ip_address
 } 

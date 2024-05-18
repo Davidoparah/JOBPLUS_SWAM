@@ -472,3 +472,31 @@ docker service logs -f <service_id_or_name>
 # Display a live stream of container(s) resource usage statistics
 
 docker stats
+
+- name: Get Gluster peer status
+  command: gluster peer status
+  register: gluster_peer_status
+  ignore_errors: true
+  tags:
+
+  - get_peer_status
+
+- name: Set fact for existing peers hostnames
+  set_fact:
+  existing_peers_hostnames: "{{ gluster_peer_status.stdout | regex_findall('Hostname: (\\S+)') }}"
+  when: gluster_peer_status.rc == 0
+  tags:
+
+  - set_peer_fact
+
+- name: Probe other peers to form a trusted pool
+  gluster.gluster.gluster_peer:
+  state: present
+  nodes: "{{ (inventory_hostname == groups['servers'][0] and 'localhost' in (existing_peers_hostnames | default([]))) | ternary('localhost', item) }}"
+  loop: "{{ groups['servers'] }}"
+  when:
+  - inventory_hostname != item
+  - item not in existing_peers_hostnames
+    tags:
+  - probe_peers
+    ignore_errors: true
