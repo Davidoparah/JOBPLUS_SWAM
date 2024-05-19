@@ -16,7 +16,7 @@ services:
       - shared_swarm_network
 
   visualizer:
-    image: bretfisher/visualizer
+    image: iconics/visualizer
     #image: dockersamples/visualizer
     # Removed ports: '8500:8080' to not expose directly
     volumes:
