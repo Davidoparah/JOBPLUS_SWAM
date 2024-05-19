@@ -59,3 +59,28 @@ jobs:
         run: |
           docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-nginx:latest" -f services/nginx/Dockerfile services/nginx/
           docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-nginx:latest"
+
+  deploy-services:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    env:
+      APP_DIR_PATH: /mnt/shared_storage/jobplus-app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          ref: main
+
+      - name: Set up SSH Keys Access for Digital Ocean Droplet
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.MANAGER_RESERVED_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy Services Stack
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no deployuser@${{ secrets.MANAGER_RESERVED_IP }} "\
+          cd $APP_DIR_PATH && \
+          docker stack deploy -c docker-compose.yml app_stack"

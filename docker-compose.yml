@@ -1,11 +1,8 @@
 version: "3.8"
 
-configs:
-  nginx_config:
-    file: ./nginx.conf
 services:
   nginx:
-    image: nginx:latest
+    image: mujimoyen/jobplus-nginx:latest
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
@@ -13,7 +10,7 @@ services:
       - "80:80" # Expose Nginx on port 80
     restart: always
     deploy:
-      replicas: 2
+      replicas: 3
       placement:
         constraints: [node.role == worker]
       update_config:
