@@ -28,6 +28,11 @@ variable "nodes" {
       role  = "worker"
       image = "ubuntu-23-10-x64"
       size  = "s-2vcpu-4gb-120gb-intel"
+    },
+    "worker2" = {
+      role  = "worker"
+      image = "ubuntu-23-10-x64"
+      size  = "s-2vcpu-4gb-120gb-intel"
     }
   }
 }
