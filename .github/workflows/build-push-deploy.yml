@@ -82,14 +82,5 @@ jobs:
       - name: Deploy Services Stack
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no deployuser@${{ secrets.MANAGER_RESERVED_IP }} "\
-          sudo mkdir -p $APP_DIR_PATH && \
-          sudo chown -R deployuser:deployuser $APP_DIR_PATH && \
           cd $APP_DIR_PATH && \
-          docker stack deploy -c docker-compose.yml app_stack && \
-          docker service logs app_stack_nginx"
-
-      # - name: Deploy Services Stack
-      #   run: |
-      #     ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no deployuser@${{ secrets.MANAGER_RESERVED_IP }} "\
-      #     cd $APP_DIR_PATH && \
-      #     docker stack deploy -c docker-compose.yml app_stack"
+          docker stack deploy -c docker-compose.yml app_stack"
