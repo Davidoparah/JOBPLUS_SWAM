@@ -1,0 +1,42 @@
+name: Build Push Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-code:
+    runs-on: ubuntu-latest
+    env:
+      APP_DIR_PATH: /mnt/shared_storage/jobplus-app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Shallow clone to have only the latest commit
+          ref: main
+
+      - name: Set up SSH Keys Access for Digital Ocean Droplet
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.MANAGER_RESERVED_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy code to manager node on server
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no deployuser@${{ secrets.MANAGER_RESERVED_IP }} "\
+
+          sudo mkdir -p $APP_DIR_PATH
+          sudo chown -R deployuser:deployuser $APP_DIR_PATH
+
+          if [ -d $APP_DIR_PATH/.git ]; then
+            git -C $APP_DIR_PATH clean -fd
+            git -C $APP_DIR_PATH reset --hard HEAD
+            git -C $APP_DIR_PATH pull
+          else
+            rm -rf $APP_DIR_PATH/*
+            git clone -b main ${{ secrets.REPO_PAT_URL }} $APP_DIR_PATH
+          fi;"

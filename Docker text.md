@@ -500,3 +500,6 @@ docker stats
     tags:
   - probe_peers
     ignore_errors: true
+
+PAT: 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
+REPO_PAT_URL=https://Davidoparah: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@github.com/Davidoparah/JOBPLUS_SWAM
