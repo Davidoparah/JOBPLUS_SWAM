@@ -1,0 +1,44 @@
+---
+- name: Create deployuser
+  ansible.builtin.user:
+    name: deployuser
+    shell: /bin/bash
+    create_home: yes
+    system: no
+
+- name: Add deployuser to sudo group
+  ansible.builtin.user:
+    name: deployuser
+    groups: sudo
+    append: yes
+
+- name: Add deployuser to docker group
+  ansible.builtin.user:
+    name: deployuser
+    groups: docker
+    append: yes
+
+- name: Allow deployuser to execute sudo commands without a password
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: "^%sudo"
+    line: "%sudo   ALL=(ALL:ALL) NOPASSWD:ALL"
+    validate: "visudo -cf %s"
+
+- name: Create .ssh directory for deployuser
+  ansible.builtin.file:
+    path: /home/deployuser/.ssh
+    state: directory
+    owner: deployuser
+    group: deployuser
+    mode: "0700"
+
+- name: Copy authorized_keys for deployuser on remote
+  ansible.builtin.copy:
+    src: /root/.ssh/authorized_keys # Source path on the remote machine
+    dest: /home/deployuser/.ssh/authorized_keys # Destination path on the remote machine
+    owner: deployuser
+    group: deployuser
+    mode: "0600"
+    remote_src: yes # indicate operation on remote

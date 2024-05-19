@@ -1,0 +1,134 @@
+---
+- name: Remove a node from GlusterFS cluster
+  hosts: swarm_managers[0]
+  gather_facts: no
+  vars:
+    node_to_remove: "{{ node_to_remove }}"
+
+  tasks:
+    - name: Determine the leader manager node
+      ansible.builtin.shell: |
+        docker node ls --format "{{ '{{.Hostname}}' }} {{ '{{.ManagerStatus}}' }}" | grep 'Leader' | awk '{print $1}'
+      register: leader_manager
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      run_once: true
+
+    - name: Ensure cluster maintains quorum - do not remove if last manager
+      ansible.builtin.fail:
+        msg: "Removing this node would breach cluster quorum. Operation aborted."
+      when:
+        - node_to_remove == leader_manager.stdout
+      run_once: true
+
+    - name: Get GlusterFS pool list
+      ansible.builtin.shell: gluster pool list
+      register: pool_list
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      run_once: true
+
+    - name: Determine if node is part of GlusterFS cluster
+      ansible.builtin.set_fact:
+        node_in_cluster: "{{ node_to_remove in pool_list.stdout }}"
+      run_once: true
+
+    - name: Copy list_bricks_on_node.sh script to remote server
+      ansible.builtin.copy:
+        src: scripts/list_bricks_on_node.sh
+        dest: /tmp/list_bricks_on_node.sh
+        mode: "0755" # This also makes the file executable
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+
+    - name: List bricks on the node to remove
+      ansible.builtin.command: /tmp/list_bricks_on_node.sh {{ node_to_remove }}
+      register: bricks_list
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+
+    - name: Calculate the new replica count
+      set_fact:
+        new_replica_count: "{{ groups['servers'] | length - 1 }}" # total length - 1
+      delegate_to: localhost
+      run_once: true
+      when: node_in_cluster
+
+    - name: Reduce replica count and remove the brick from the volume
+      ansible.builtin.shell: |
+        echo yes | gluster volume remove-brick {{ item.split(':')[0] }} replica {{ new_replica_count }} {{ item.split(':')[1] | trim }}:{{ item.split(':')[2] | trim }} force
+      loop: "{{ bricks_list.stdout_lines }}"
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      when:
+        - bricks_list.stdout_lines | length > 0
+        - node_in_cluster
+        - node_to_remove != leader_manager.stdout
+
+    - name: Remove the node from GlusterFS cluster if it is part of the cluster and not the leader
+      ansible.builtin.shell: echo y | gluster peer detach {{ node_to_remove }} force
+      when:
+        - node_in_cluster
+        - node_to_remove != leader_manager.stdout
+      ignore_errors: yes
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      run_once: true
+
+- name: Safely remove a node from Docker Swarm
+  hosts: swarm_managers[0]
+  gather_facts: no
+  vars:
+    node_to_remove: "{{ node_to_remove }}"
+
+  tasks:
+    - name: Determine the leader manager node
+      ansible.builtin.shell: |
+        docker node ls --format "{{ '{{.Hostname}}' }} {{ '{{.ManagerStatus}}' }}" | grep 'Leader' | awk '{print $1}'
+      register: leader_manager
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      run_once: true
+
+    - name: Ensure cluster maintains quorum - do not remove if last manager
+      ansible.builtin.fail:
+        msg: "Removing this node would breach cluster quorum. Operation aborted."
+      when:
+        - node_to_remove == leader_manager.stdout
+      run_once: true
+
+    - name: Check if the node is part of Docker Swarm
+      ansible.builtin.shell:
+        cmd: "docker info --format '{{ '{{.Swarm.LocalNodeState}}' }}'"
+      delegate_to: "{{ node_to_remove }}"
+      register: swarm_status
+      changed_when: false
+
+    - name: Drain node in Docker Swarm
+      ansible.builtin.shell: docker node update --availability drain {{ node_to_remove }}
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      when:
+        - node_to_remove != leader_manager.stdout
+        - swarm_status.stdout == 'active'
+
+    - name: Demote the node if it is a manager
+      ansible.builtin.shell:
+        cmd: "docker node demote {{ node_to_remove }}"
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      when:
+        - node_to_remove in groups['swarm_managers']
+        - node_to_remove != leader_manager.stdout
+        - swarm_status.stdout == 'active'
+
+    - name: Leave Docker Swarm
+      ansible.builtin.shell: docker swarm leave --force
+      delegate_to: "{{ node_to_remove }}"
+      when:
+        - node_to_remove != leader_manager.stdout
+        - swarm_status.stdout == 'active'
+      ignore_errors: yes
+
+    - name: Remove node from the Swarm (run on a manager node)
+      ansible.builtin.shell: docker node rm --force {{ node_to_remove }}
+      delegate_to: "{{ groups['swarm_managers'][0] }}"
+      when:
+        - node_to_remove != leader_manager.stdout
+        - swarm_status.stdout == 'active'
+      ignore_errors: yes
+
+    - name: Notice
+      ansible.builtin.debug:
+        msg: "Now you can safely remove {{ node_to_remove }} node using terraform"
