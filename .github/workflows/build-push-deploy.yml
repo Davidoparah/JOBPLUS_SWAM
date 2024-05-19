@@ -40,3 +40,22 @@ jobs:
             rm -rf $APP_DIR_PATH/*
             git clone -b main ${{ secrets.REPO_PAT_URL }} $APP_DIR_PATH
           fi;"
+
+  build-and-push:
+    needs: deploy-code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          ref: main
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Nginx Docker Image
+        run: |
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-nginx:latest" -f services/nginx/Dockerfile services/nginx/
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-nginx:latest"
