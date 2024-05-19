@@ -3,9 +3,6 @@ version: "3.8"
 services:
   nginx:
     image: mujimoyen/jobplus-nginx:latest
-    configs:
-      - source: nginx_config
-        target: /etc/nginx/nginx.conf
     ports:
       - "80:80" # Expose Nginx on port 80
     restart: always
