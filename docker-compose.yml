@@ -16,7 +16,8 @@ services:
       - shared_swarm_network
 
   visualizer:
-    image: dockersamples/visualizer
+    image: hypriot/visualizer
+    #image: dockersamples/visualizer
     # Removed ports: '8500:8080' to not expose directly
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
