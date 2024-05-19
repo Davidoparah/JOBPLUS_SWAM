@@ -29,14 +29,27 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no deployuser@${{ secrets.MANAGER_RESERVED_IP }} "\
 
-          sudo mkdir -p $APP_DIR_PATH
-          sudo chown -R deployuser:deployuser $APP_DIR_PATH
+          sudo mkdir -p \$APP_DIR_PATH && \
+          sudo chown -R deployuser:deployuser \$APP_DIR_PATH && \
+          if [ -d \$APP_DIR_PATH/.git ]; then \
+            git -C \$APP_DIR_PATH clean -fd && \
+            git -C \$APP_DIR_PATH reset --hard HEAD && \
+            git -C \$APP_DIR_PATH pull; \
+          else \
+           rm -rf \$APP_DIR_PATH/* && \
+           git clone -b main <git_repository_url> \$APP_DIR_PATH; \
+          fi"
 
-          if [ -d $APP_DIR_PATH/.git ]; then
-            git -C $APP_DIR_PATH clean -fd
-            git -C $APP_DIR_PATH reset --hard HEAD
-            git -C $APP_DIR_PATH pull
-          else
-            rm -rf $APP_DIR_PATH/*
-            git clone -b main ${{ secrets.REPO_PAT_URL }} $APP_DIR_PATH
-          fi;"
+        # sudo mkdir -p $APP_DIR_PATH
+        # sudo chown -R deployuser:deployuser $APP_DIR_PATH
+
+#
+# if [ -d $APP_DIR_PATH/.git ]; then
+#   git -C $APP_DIR_PATH clean -fd
+#   git -C $APP_DIR_PATH reset --hard HEAD
+#   git -C $APP_DIR_PATH pull
+# else
+#   rm -rf $APP_DIR_PATH/*
+#   git clone -b main ${{ secrets.REPO_PAT_URL }} $APP_DIR_PATH
+# fi;"
+
