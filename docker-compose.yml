@@ -32,9 +32,6 @@ services:
 volumes:
   postgres-data:
 
-networks:
-  shared_swarm_network:
-    external: true
   visualizer:
     image: dockersamples/visualizer
     #image: dockersamples/visualizer
