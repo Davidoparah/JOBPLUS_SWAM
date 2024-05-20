@@ -27,7 +27,7 @@ services:
       - shared_swarm_network
     deploy:
       placement:
-        constraints: [node.role == worker]
+        constraints: [node.role == manager]
 
   visualizer:
     image: dockersamples/visualizer
