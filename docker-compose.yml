@@ -15,6 +15,18 @@ services:
     networks:
       - shared_swarm_network
 
+  jobplus-postgres:
+    image: mujimoyen/jobplus-postgres:latest
+    environment:
+      POSTGRES_USER: jobplus_user
+      POSTGRES_PASSWORD: D3vB*tWsmP3@6#A!
+      POSTGRES_DB: jobplus_prod
+    networks:
+      - shared_swarm_network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
   visualizer:
     image: dockersamples/visualizer
     #image: dockersamples/visualizer
