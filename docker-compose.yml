@@ -15,18 +15,6 @@ services:
     networks:
       - shared_swarm_network
 
-  visualizer:
-    image: dockersamples/visualizer
-    #image: dockersamples/visualizer
-    # Removed ports: '8500:8080' to not expose directly
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    networks:
-      - shared_swarm_network
-    deploy:
-      placement:
-        constraints: [node.role == manager]
-
   jobplus-postgres:
     image: mujimoyen/jobplus-postgres:latest
     volumes:
@@ -40,6 +28,18 @@ services:
     deploy:
       placement:
         constraints: [node.role == worker]
+
+  visualizer:
+    image: dockersamples/visualizer
+    #ports:
+    # - "8500:8080" # Expose the visualizer on port 8500
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - shared_swarm_network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
 
 volumes:
   postgres-data:
