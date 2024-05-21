@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       APP_DIR_PATH: /mnt/shared_storage/jobplus-app
+      POSTGRES_DATA_PATH: /mnt/shared_storage/postgres-data
 
     steps:
       - name: Checkout repository
@@ -29,6 +30,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no deployuser@${{ secrets.MANAGER_RESERVED_IP }} "\
 
+          sudo mkdir -p $POSTGRES_DATA_PATH
           sudo mkdir -p $APP_DIR_PATH
           sudo chown -R deployuser:deployuser $APP_DIR_PATH
 

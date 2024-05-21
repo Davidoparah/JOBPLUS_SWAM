@@ -18,7 +18,7 @@ services:
   jobplus-postgres:
     image: mujimoyen/jobplus-postgres:latest
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - /mnt/shared_storage/postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: jobplus_user
       POSTGRES_PASSWORD: D3vB*tWsmP3@6#A!
@@ -26,8 +26,9 @@ services:
     networks:
       - shared_swarm_network
     deploy:
+      replicas: 4
       placement:
-        constraints: [node.role == manager]
+        constraints: [node.role == worker]
 
   visualizer:
     image: dockersamples/visualizer
@@ -40,9 +41,6 @@ services:
     deploy:
       placement:
         constraints: [node.role == manager]
-
-volumes:
-  postgres-data:
 
 networks:
   shared_swarm_network:
