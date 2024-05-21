@@ -7,7 +7,7 @@ services:
       - "80:80" # Expose Nginx on port 80
     restart: always
     deploy:
-      replicas: 3
+      replicas: 2
       placement:
         constraints: [node.role == worker]
       update_config:
@@ -26,7 +26,7 @@ services:
     networks:
       - shared_swarm_network
     deploy:
-      replicas: 4
+      replicas: 2
       placement:
         constraints: [node.role == worker]
 
