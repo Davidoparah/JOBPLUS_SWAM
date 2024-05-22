@@ -42,6 +42,23 @@ services:
       placement:
         constraints: [node.role == manager]
 
+  etcd:
+    image: mujimoyen/jobplus-etcd:latest
+    ports:
+      - "2379:2379" # For client communication
+      - "2380:2380" # For other etcd nodes communication
+    volumes:
+      # - '/mnt/shared_storage/etcd-data:/etcd-data'
+      - etcd_data:/etcd-data
+    networks:
+      - shared_swarm_network
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+volumes:
+  etcd_data:
+
 networks:
   shared_swarm_network:
     external: true

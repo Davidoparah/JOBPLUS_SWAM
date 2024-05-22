@@ -39,6 +39,14 @@
   roles:
     - gluster_mount_volume
 
+- name: Etcd Setup
+  hosts: servers
+  become: true
+  roles:
+    - etcd_setup
+  tags:
+    - etcd_setup
+
 - name: Swarm Initialize
   hosts: swarm_managers[0]
   become: true

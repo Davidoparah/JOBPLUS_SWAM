@@ -1,0 +1,68 @@
+---
+- name: Ensure etcd group exists
+  ansible.builtin.group:
+    name: etcdgroup
+    gid: 10002 # Unique GID for etcd group, referenced in etcd Dockerfile
+
+- name: Create etcd user with specific UID and GID
+  ansible.builtin.user:
+    name: etcduser
+    shell: /bin/bash
+    create_home: yes
+    uid: 10002 # Unique UID for etcd user
+    group: etcdgroup
+    system: no
+
+- name: Set ownership of etcd data directory
+  ansible.builtin.file:
+    path: /mnt/shared_storage/etcd-data
+    state: directory
+    owner: etcduser
+    group: etcdgroup
+    mode: "0700" # Appropriate permissions for etcd data directory
+
+- name: Add etcd user to docker group
+  ansible.builtin.user:
+    name: etcduser
+    groups:
+      - docker
+    append: yes
+
+- name: Create .ssh directory for etcd user
+  ansible.builtin.file:
+    path: /home/etcduser/.ssh
+    state: directory
+    owner: etcduser
+    group: etcdgroup
+    mode: "0700"
+
+- name: Copy authorized_keys for etcd user on remote
+  ansible.builtin.copy:
+    src: /root/.ssh/authorized_keys # Assuming you want to use the same keys
+    dest: /home/etcduser/.ssh/authorized_keys
+    owner: etcduser
+    group: etcdgroup
+    mode: "0600"
+    remote_src: yes
+
+- name: Download etcdctl binary
+  get_url:
+    url: "https://github.com/etcd-io/etcd/releases/download/v3.3.25/etcd-v3.3.25-linux-amd64.tar.gz"
+    dest: "/tmp/etcd-v3.3.25-linux-amd64.tar.gz"
+    mode: "0644"
+
+- name: Extract etcdctl binary
+  unarchive:
+    src: "/tmp/etcd-v3.3.25-linux-amd64.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+    creates: "/tmp/etcd-v3.3.25-linux-amd64"
+
+- name: Move etcdctl to /usr/local/bin
+  command: mv /tmp/etcd-v3.3.25-linux-amd64/etcdctl /usr/local/bin/etcdctl
+  args:
+    creates: /usr/local/bin/etcdctl
+
+- name: Label Docker Swarm nodes
+  shell: "docker node update --label-add role={{ inventory_hostname }} {{ inventory_hostname }}"
+  delegate_to: "{{ groups['swarm_managers'][0] }}"
