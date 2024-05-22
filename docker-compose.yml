@@ -58,7 +58,6 @@ services:
 
 volumes:
   etcd_data:
-
 networks:
   shared_swarm_network:
     external: true

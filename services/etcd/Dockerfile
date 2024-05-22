@@ -31,6 +31,8 @@ ENV ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379 \
     ETCD_LOGGER="zap" \
     ETCD_NAME="etcd" \
     ETCDCTL_API=3
+
+
 # Expose the etcd client and peer ports
 EXPOSE 2379 2380
 
