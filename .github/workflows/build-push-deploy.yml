@@ -72,6 +72,11 @@ jobs:
           docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-etcd:latest" -f services/etcd/Dockerfile services/etcd/
           docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-etcd:latest"
 
+      - name: Build and Push Stolon Image
+        run: |
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-stolon:latest" -f services/stolon/Dockerfile services/stolon/
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-stolon:latest"
+
   deploy-services:
     needs: build-and-push
     runs-on: ubuntu-latest
