@@ -65,8 +65,49 @@ services:
     deploy:
       placement:
         constraints: [node.role == manager]
+
+  keeper1:
+    image: mujimoyen/jobplus-stolon:latest
+    environment:
+      - ROLE=keeper
+      - STKEEPER_UID=keeper1
+      - PG_REPL_USERNAME=repluser
+      - PG_REPL_PASSWORD=repl_password
+      - PG_SU_USERNAME=postgres
+      - PG_SU_PASSWORD=su_password
+    volumes:
+      - stolon_keeper1_data:/stolon/data
+      - stolon_keeper1_pg_data:/var/lib/postgresql/data
+    networks:
+      - shared_swarm_network
+    deploy:
+      placement:
+        constraints: [node.labels.role == worker1] # Assigns the service to a specific node.
+
+  keeper2:
+    image: mujimoyen/jobplus-stolon:latest
+    environment:
+      - ROLE=keeper
+      - STKEEPER_UID=keeper2
+      - PG_REPL_USERNAME=repluser
+      - PG_REPL_PASSWORD=repl_password
+      - PG_SU_USERNAME=postgres
+      - PG_SU_PASSWORD=su_password
+    volumes:
+      - stolon_keeper2_data:/stolon/data
+      - stolon_keeper2_pg_data:/var/lib/postgresql/data
+    networks:
+      - shared_swarm_network
+    deploy:
+      placement:
+        constraints: [node.labels.role == worker2] # Assigns the service to a specific node.
+
 volumes:
   etcd_data:
+  stolon_keeper1_data:
+  stolon_keeper1_pg_data:
+  stolon_keeper2_data:
+  stolon_keeper2_pg_data:
 
 networks:
   shared_swarm_network:

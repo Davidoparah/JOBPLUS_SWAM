@@ -8,7 +8,7 @@ ARG PG_FOLDER=16
 # Define the version of Stolon being used
 ENV STOLON_VERSION v0.17.0
 
-# Install necessary packages
+ # Install necessary packages
 RUN apt-get update && \
     apt-get install -y curl unzip procps && \
     rm -rf /var/lib/apt/lists/* 
