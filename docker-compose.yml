@@ -112,6 +112,18 @@ services:
       placement:
         constraints: [node.role == manager]
 
+  # Deploys Stolon Proxy for routing client connections to the right PostgreSQL instance.
+  proxy:
+    image: mujimoyen/jobplus-stolon:latest
+    environment:
+      - ROLE=proxy
+    networks:
+      - shared_swarm_network
+    ports:
+      - "5432:5432"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
 volumes:
   etcd_data:
   stolon_keeper1_data:
