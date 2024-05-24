@@ -39,6 +39,10 @@ case "$ROLE" in
     ;;
   "sentinel")
     echo "Starting Stolon sentinel..."
+    stolon-sentinel \
+      --cluster-name $STOLONCTL_CLUSTER_NAME \
+      --store-backend $STOLONCTL_STORE_BACKEND \
+      --store-endpoints $STOLONCTL_STORE_URL
     ;;
   "proxy")
     echo "Starting Stolon proxy..."
