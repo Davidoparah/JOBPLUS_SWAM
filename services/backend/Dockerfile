@@ -18,7 +18,7 @@ COPY package.json yarn.lock ./
 
 # Install global dependencies and configure yarn
 RUN yarn global add node-gyp strapi
-RUN yarn config set network-timeout 600000 -g
+RUN yarn config set network-timeout 1200000 -g
 
 # Install node modules with environment variables
 RUN npm_config_build_from_source=true yarn install --production--ignore-engines
