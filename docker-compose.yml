@@ -2,12 +2,22 @@ version: "3.8"
 
 services:
   nginx:
-    image: mujimoyen/jobplus-nginx:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-nginx:latest
     ports:
       - "80:80" # Expose Nginx on port 80
+      - "443:443"
+    volumes:
+      - /mnt/shared_storage/letsencrypt:/etc/letsencrypt
+      - /mnt/shared_storage/certbot:/var/www/certbot
+      # - letsencrypt:/etc/letsencrypt
+      # - certbot:/var/www/certbot
+    depends_on:
+      - affiliate-frontend
     restart: always
     deploy:
-      replicas: 2
+      replicas: 1
+      restart_policy:
+        condition: on-failure
       placement:
         constraints: [node.role == worker]
       update_config:
@@ -15,18 +25,62 @@ services:
     networks:
       - shared_swarm_network
 
+  affiliate-backend:
+    image: "${DOCKER_HUB_USERNAME}/${APP}-affiliate-backend:latest"
+    environment:
+      - NODE_ENV=production
+      - PORT=${STRAPI_PORT}
+      - HOST=${STRAPI_HOST}
+      - APP_KEYS=${APP_KEYS}
+      - API_TOKEN_SALT=${API_TOKEN_SALT}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - TRANSFER_TOKEN_SALT=${TRANSFER_TOKEN_SALT}
+      - JWT_SECRET=${JWT_SECRET}
+
+      - DATABASE_CLIENT=${DATABASE_CLIENT}
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+    ports:
+      - "1337:1337"
+    depends_on:
+      - affiliate-db
+    deploy:
+      replicas: 2
+    networks:
+      - shared_swarm_network
+
+  affiliate-db:
+    image: postgres
+    volumes:
+      - affiliate_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "5432:5432"
+    deploy:
+      replicas: 1
+    networks:
+      - shared_swarm_network
+
   jobplus-postgres:
-    image: mujimoyen/jobplus-postgres:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-postgres:latest
     volumes:
       - /mnt/shared_storage/postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: jobplus_user
-      POSTGRES_PASSWORD: D3vB*tWsmP3@6#A!
-      POSTGRES_DB: jobplus_prod
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - "5432:5432"
     networks:
       - shared_swarm_network
     deploy:
-      replicas: 4
+      replicas: 1
       placement:
         constraints: [node.role == worker]
 
@@ -43,7 +97,7 @@ services:
         constraints: [node.role == manager]
 
   etcd:
-    image: mujimoyen/jobplus-etcd:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-etcd:latest
     ports:
       - "2379:2379" # For client communication
       - "2380:2380" # For other etcd nodes communication
@@ -57,7 +111,7 @@ services:
         constraints: [node.role == manager]
 
   ctl:
-    image: mujimoyen/jobplus-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
     environment:
       - ROLE=ctl
     networks:
@@ -67,7 +121,7 @@ services:
         constraints: [node.role == manager]
 
   keeper1:
-    image: mujimoyen/jobplus-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
     environment:
       - ROLE=keeper
       - STKEEPER_UID=keeper1
@@ -85,7 +139,7 @@ services:
         constraints: [node.labels.role == worker1] # Assigns the service to a specific node.
 
   keeper2:
-    image: mujimoyen/jobplus-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
     environment:
       - ROLE=keeper
       - STKEEPER_UID=keeper2
@@ -103,7 +157,7 @@ services:
         constraints: [node.labels.role == worker2] # Assigns the service to a specific node.
 
   sentinel:
-    image: mujimoyen/jobplus-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
     environment:
       - ROLE=sentinel
     networks:
@@ -114,7 +168,7 @@ services:
 
   # Deploys Stolon Proxy for routing client connections to the right PostgreSQL instance.
   proxy:
-    image: mujimoyen/jobplus-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
     environment:
       - ROLE=proxy
     networks:
@@ -130,6 +184,9 @@ volumes:
   stolon_keeper1_pg_data:
   stolon_keeper2_data:
   stolon_keeper2_pg_data:
+  affiliate_db:
+  # letsencrypt:
+  # certbot:
 
 networks:
   shared_swarm_network:

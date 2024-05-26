@@ -59,23 +59,30 @@ jobs:
 
       - name: Build and Push Nginx Docker Image
         run: |
-          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-nginx:latest" -f services/nginx/Dockerfile services/nginx/
-          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-nginx:latest"
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-nginx:latest" -f services/nginx/Dockerfile services/nginx/
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-nginx:latest"
 
       - name: Build and Push Postgres Image
         run: |
-          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-postgres:latest" -f services/jobplus-postgres/Dockerfile services/jobplus-postgres/
-          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-postgres:latest"
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-postgres:latest" -f services/jobplus-postgres/Dockerfile services/jobplus-postgres/
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-postgres:latest"
 
       - name: Build and Push Etcd Image
         run: |
-          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-etcd:latest" -f services/etcd/Dockerfile services/etcd/
-          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-etcd:latest"
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-etcd:latest" -f services/etcd/Dockerfile services/etcd/
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-etcd:latest"
 
       - name: Build and Push Stolon Image
         run: |
-          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-stolon:latest" -f services/stolon/Dockerfile services/stolon/
-          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/jobplus-stolon:latest"
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-stolon:latest" -f services/stolon/Dockerfile services/stolon/
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-stolon:latest"
+
+      - name: Build and push Node Image
+        run: |
+          docker pull "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-affiliate-backend:latest"
+          docker build -t "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-affiliate-backend:latest" -f services/backend/Dockerfile services/backend/
+          docker run -d -p 1337:1337 ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-affiliate-backend:latest
+          docker push "${{ secrets.DOCKER_HUB_USERNAME }}/${{env.APP}}-affiliate-backend:latest"
 
   deploy-services:
     needs: build-and-push
