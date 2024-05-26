@@ -3,14 +3,14 @@ FROM node:18-alpine as build
 
 # Install dependencies for building native modules
 RUN apk update && apk add --no-cache \
-    build-base \
-    gcc \
-    autoconf \
-    automake \
+    python3 \
+    make \
+    g++ \
     zlib-dev \
     libpng-dev \
     vips-dev \
-    git > /dev/null 2>&1
+    git \
+    build-base
 
 ENV NODE_ENV=production
 
