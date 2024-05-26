@@ -21,7 +21,7 @@ RUN yarn global add node-gyp
 RUN yarn config set network-timeout 600000 -g
 
 # Install node modules with environment variables
-RUN npm_config_build_from_source=true yarn install --production
+RUN npm_config_build_from_source=true yarn install --production--ignore-engines
 
 # Set the working directory for the application code
 WORKDIR /opt/app
