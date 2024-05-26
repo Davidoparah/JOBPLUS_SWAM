@@ -26,7 +26,7 @@ services:
       - shared_swarm_network
 
   affiliate-backend:
-    image: "${DOCKER_HUB_USERNAME}/${APP}-affiliate-backend:latest"
+    image: "${DOCKER_HUB_USERNAME}/jobplus-affiliate-backend:latest"
     environment:
       - NODE_ENV=production
       - PORT=${STRAPI_PORT}
@@ -68,7 +68,7 @@ services:
       - shared_swarm_network
 
   jobplus-postgres:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-postgres:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-postgres:latest
     volumes:
       - /mnt/shared_storage/postgres-data:/var/lib/postgresql/data
     environment:
@@ -97,7 +97,7 @@ services:
         constraints: [node.role == manager]
 
   etcd:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-etcd:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-etcd:latest
     ports:
       - "2379:2379" # For client communication
       - "2380:2380" # For other etcd nodes communication
@@ -111,7 +111,7 @@ services:
         constraints: [node.role == manager]
 
   ctl:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-stolon:latest
     environment:
       - ROLE=ctl
     networks:
@@ -121,7 +121,7 @@ services:
         constraints: [node.role == manager]
 
   keeper1:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-stolon:latest
     environment:
       - ROLE=keeper
       - STKEEPER_UID=keeper1
@@ -139,7 +139,7 @@ services:
         constraints: [node.labels.role == worker1] # Assigns the service to a specific node.
 
   keeper2:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-stolon:latest
     environment:
       - ROLE=keeper
       - STKEEPER_UID=keeper2
@@ -157,7 +157,7 @@ services:
         constraints: [node.labels.role == worker2] # Assigns the service to a specific node.
 
   sentinel:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-stolon:latest
     environment:
       - ROLE=sentinel
     networks:
@@ -168,7 +168,7 @@ services:
 
   # Deploys Stolon Proxy for routing client connections to the right PostgreSQL instance.
   proxy:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-stolon:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-stolon:latest
     environment:
       - ROLE=proxy
     networks:
