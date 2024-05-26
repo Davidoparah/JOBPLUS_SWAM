@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   nginx:
-    image: ${DOCKER_HUB_USERNAME}/${APP}-nginx:latest
+    image: ${DOCKER_HUB_USERNAME}/jobplus-nginx:latest
     ports:
       - "80:80" # Expose Nginx on port 80
       - "443:443"
