@@ -1,5 +1,5 @@
 # Stage 1: Build Stage
-FROM node:18-alpine as build
+FROM node:18.16.0-alpine as build
 
 # Install dependencies for building native modules
 RUN apk update && apk add --no-cache \
@@ -12,6 +12,7 @@ RUN apk update && apk add --no-cache \
     git \
     build-base
 
+# Set environment variables
 ENV NODE_ENV=production
 
 # Set the working directory
@@ -22,10 +23,10 @@ COPY package.json yarn.lock ./
 
 # Install global dependencies and configure yarn
 RUN yarn global add node-gyp
-RUN yarn config set network-timeout 600000 -g && yarn install --production
+RUN yarn config set network-timeout 600000 -g
 
-# Ensure binaries are available in the PATH
-ENV PATH /opt/node_modules/.bin:$PATH
+# Install node modules with environment variables
+RUN npm_config_build_from_source=true yarn install --production
 
 # Set the working directory for the application code
 WORKDIR /opt/app
@@ -42,7 +43,9 @@ FROM node:18-alpine
 # Install runtime dependencies
 RUN apk add --no-cache vips-dev
 
+# Set environment variables
 ENV NODE_ENV=production
+ENV PATH /opt/node_modules/.bin:$PATH
 
 # Set the working directory
 WORKDIR /opt/
@@ -50,9 +53,6 @@ WORKDIR /opt/
 # Copy node_modules and built application from the build stage
 COPY --from=build /opt/node_modules ./node_modules
 COPY --from=build /opt/app ./
-
-# Ensure binaries are available in the PATH
-ENV PATH /opt/node_modules/.bin:$PATH
 
 # Change ownership to non-root user (optional)
 RUN chown -R node:node /opt/app
