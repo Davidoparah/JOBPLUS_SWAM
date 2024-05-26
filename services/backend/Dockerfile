@@ -17,7 +17,7 @@ WORKDIR /opt/
 COPY package.json yarn.lock ./
 
 # Install global dependencies and configure yarn
-RUN yarn global add node-gyp
+RUN yarn global add node-gyp strapi
 RUN yarn config set network-timeout 600000 -g
 
 # Install node modules with environment variables
