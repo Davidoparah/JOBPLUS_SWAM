@@ -2,15 +2,10 @@
 FROM node:18.16.0-alpine as build
 
 # Install dependencies for building native modules
-RUN apk update && apk add --no-cache \
+RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev vips-dev git > /dev/null 2>&1\
     python3 \
     make \
-    g++ \
-    zlib-dev \
-    libpng-dev \
-    vips-dev \
-    git \
-    build-base
+    g++ 
 
 # Set environment variables
 ENV NODE_ENV=production
